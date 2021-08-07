@@ -1,5 +1,4 @@
-FROM java:8
-FROM maven:alpine
+FROM maven:3.6.3-jdk-11-slim
 WORKDIR /app
 COPY . /app
 RUN mvn -v
