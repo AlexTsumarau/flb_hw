@@ -12,11 +12,11 @@
 
 ---
 **Not implemented:**
-- creating line, connection
-- editing line
-- selectbox for lines in connections table
-- any js tests
-- only few junit tests
+- FE: creating line, connection; BE: implemented
+- FE: editing line; BE: implemented
+- FE: selectbox for lines in connections table
+- FE: no js tests
+- BE: only few junit tests
 
 ---
 **Expected result:**
