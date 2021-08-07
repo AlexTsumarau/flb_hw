@@ -1,16 +1,19 @@
-import React, {useState, useEffect, useMemo, useRef} from "react";
+import React, {useState, useEffect, useMemo, useRef, useCallback} from "react";
 import ApiBackendService from "../services/ApiBackendService";
-import {useTable, usePagination} from "react-table";
+import {useTable, usePagination, useSortBy} from "react-table";
+import EditableCell from "./EditableCell";
 
 const ConnectionsList = (props) => {
-    const [tutorials, setTutorials] = useState([]);
+    const [connectionsData, setConnectionsData] = useState([]);
     const [searchTitle, setSearchTitle] = useState("");
     const [searchLine, setSearchLine] = useState("");
     const [pageCountUpdated, setPageCountUpdted] = useState(0);
-    const [sortBy, setSortBy] = useState({});
-    const tutorialsRef = useRef();
+    const connectionsDataRef = useRef();
+    connectionsDataRef.current = connectionsData;
 
-    tutorialsRef.current = tutorials;
+    const defaultColumn = {
+        Cell: EditableCell,
+    }
 
     const onChangeSearchTitle = (e) => {
         const searchTitle = e.target.value;
@@ -22,10 +25,6 @@ const ConnectionsList = (props) => {
         setSearchLine(searchLine);
     };
 
-    const fetchTableData = () => {
-        //console.log('!!!!!!!!!!!!!!! fetchTableData', pageCount, pageIndex, pageSize);
-    };
-
     const fetch = () => {
         if(searchTitle.length === 0 && searchLine.length === 0){
             fetchAll();
@@ -35,14 +34,14 @@ const ConnectionsList = (props) => {
     }
 
     const fetchAll = () => {
-        ApiBackendService.getAll({pageIndex, pageSize})
+        const sortByCond = sortBy.length > 0 ? sortBy[0].id + ',' + (sortBy[0].desc?'desc':'asc') : null;
+        ApiBackendService.getAll({pageIndex, pageSize, sortByCond})
             .then((response) => {
                 response.data._embedded.connections.map(c => {
                     c.line = c._links.line.href;
                     return c;
                 });
-                setTutorials(response.data._embedded.connections);
-                //setPageSize(response.data.page.size);
+                setConnectionsData(response.data._embedded.connections);
                 setPageCountUpdted(response.data.page.totalPages);
                 this.state.pageCount = 10;
             })
@@ -51,9 +50,10 @@ const ConnectionsList = (props) => {
             });
     };
     const fetchFiltered = () => {
-        ApiBackendService.findBy({pageIndex, pageSize, searchTitle, searchLine})
+        const sortByCond = sortBy.length > 0 ? sortBy[0].id + ',' + (sortBy[0].desc?'desc':'asc') : null;
+        ApiBackendService.findBy({pageIndex, pageSize, searchTitle, searchLine, sortByCond})
             .then((response) => {
-                setTutorials(response.data._embedded.connections);
+                setConnectionsData(response.data._embedded.connections);
                 setPageCountUpdted(Math.round(response.data._embedded.connections.length/pageSize));
                 setPageIndex(0);
             })
@@ -62,17 +62,17 @@ const ConnectionsList = (props) => {
             });
     };
 
-    const deleteTutorial = (rowIndex) => {
-        const id = tutorialsRef.current[rowIndex].id;
+    const deleteConnection = (rowIndex) => {
+        const id = connectionsDataRef.current[rowIndex].id;
 
         ApiBackendService.remove(id)
             .then((response) => {
-                props.history.push("/tutorials");
+                props.history.push("/connections");
 
-                let newTutorials = [...tutorialsRef.current];
-                newTutorials.splice(rowIndex, 1);
+                let newconnectionsData = [...connectionsDataRef.current];
+                newconnectionsData.splice(rowIndex, 1);
 
-                setTutorials(newTutorials);
+                setConnectionsData(newconnectionsData);
             })
             .catch((e) => {
                 console.log(e);
@@ -84,18 +84,22 @@ const ConnectionsList = (props) => {
             {
                 Header: "#",
                 accessor: "id",
+                sortable: true
             },
             {
                 Header: "Name",
                 accessor: "name",
+                sortable: true
             },
             {
                 Header: "Duration, mins",
                 accessor: "duration",
+                sortable: true
             },
             {
                 Header: "Distance, km",
                 accessor: "distance",
+                sortable: true
             },
             {
                 Header: "Line",
@@ -108,7 +112,7 @@ const ConnectionsList = (props) => {
                     const rowIdx = props.row.id;
                     return (
                         <div>
-                            <span onClick={() => deleteTutorial(rowIdx)}>
+                            <span onClick={() => deleteConnection(rowIdx)}>
                 <i className="fas fa-trash action"></i>
               </span>
                         </div>
@@ -119,13 +123,18 @@ const ConnectionsList = (props) => {
         []
     );
 
+    const updateMyDataF = (id, key, value) => {
+        let data = {};
+        data[key] = value;
+        ApiBackendService.update(id, data);
+    }
+
     const {
         getTableProps,
         getTableBodyProps,
         headerGroups,
         rows,
         prepareRow,
-        page,
         canPreviousPage,
         canNextPage,
         pageOptions,
@@ -133,39 +142,28 @@ const ConnectionsList = (props) => {
         nextPage,
         previousPage,
         setPageIndex,
-        setPageSize,
-        setPageCount,
-        state: {pageIndex, pageSize, pageCount},
+        updateMyData,
+        state: {pageIndex, pageSize, pageCount, sortBy},
     } = useTable({
         columns,
-        data: tutorials,
-        initialState: {pageIndex: 0, pageSize: 10, pageCountUpdated: 3},
-        fetchData: fetchTableData(),
+        defaultColumn,
+        data: connectionsData,
+        initialState: {pageIndex: 0, pageSize: 10, pageCountUpdated: 0},
+        //fetchData: fetchTableData(),
         manualPagination: true,
-        pageCount: pageCountUpdated
-    }, usePagination);
+        pageCount: pageCountUpdated,
+        autoResetSortBy: false,
+        autoResetPage: false,
+        manualSortBy: true,
+        updateMyData: updateMyDataF
+    }, useSortBy, usePagination);
 
     useEffect(() => {
         fetch();
-    },[pageSize, pageIndex, pageCount]);
+    },[pageSize, pageIndex, pageCount, sortBy]);
 
     return (
         <div className="list row">
-            <pre>
-        <code>
-          {JSON.stringify(
-              {
-                  pageIndex,
-                  pageSize,
-                  pageCountUpdated,
-                  canNextPage,
-                  canPreviousPage,
-              },
-              null,
-              2
-          )}
-        </code>
-      </pre>
             <div className="col-md-12">
                 <div className="input-group mb-3">
                     <input
@@ -195,14 +193,14 @@ const ConnectionsList = (props) => {
                     {headerGroups.map((headerGroup) => (
                         <tr {...headerGroup.getHeaderGroupProps()}>
                             {headerGroup.headers.map((column) => (
-                                <th {...column.getHeaderProps()}>
+                                <th {...column.getHeaderProps(column.getSortByToggleProps())}>
                                     {column.render("Header")}
                                     <span>
-                    {column.isSorted
+                    {column.isSorted && column.sortable
                         ? column.isSortedDesc
-                            ? ' 🔽'
-                            : ' 🔼'
-                        : ''}
+                            ? " 🔽"
+                            : " 🔼"
+                        : ""}
                   </span>
                                 </th>
                             ))}

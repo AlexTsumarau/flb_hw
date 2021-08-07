@@ -12,19 +12,12 @@ function App() {
   return (
     <div>
       <nav className="navbar navbar-expand navbar-dark bg-dark">
-        <a href="/connections" className="navbar-brand">
-          Connections
-        </a>
         <div className="navbar-nav mr-auto">
           <li className="nav-item">
-            <Link to={"/lines"} className="nav-link">
-              Lines
-            </Link>
+            <Link to={"/connections"} className="nav-link">Connections</Link>
           </li>
           <li className="nav-item">
-            <Link to={"/add"} className="nav-link">
-              Add
-            </Link>
+            <Link to={"/lines"} className="nav-link">Lines</Link>
           </li>
         </div>
       </nav>

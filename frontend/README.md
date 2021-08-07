@@ -1,7 +1,7 @@
 ### Set port
 .env
 ```
-PORT=8081
+PORT=3000
 ```
 
 ## Project setup
