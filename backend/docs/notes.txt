@@ -1,0 +1,3 @@
+http://localhost:8088/api/connections?sort=distance,asc
+http://localhost:8088/api/connections/search/findByNameContaining?name=Berlin
+http://localhost:8088/api/lines/search/findByDescriptionContaining?description=FLX000&size=2

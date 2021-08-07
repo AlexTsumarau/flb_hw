@@ -1,0 +1,21 @@
+DROP TABLE IF EXISTS connections;
+DROP TABLE IF EXISTS lines;
+
+CREATE TABLE IF NOT EXISTS lines (
+id INT AUTO_INCREMENT PRIMARY KEY,
+number VARCHAR(32) NOT NULL,
+description VARCHAR(255) NOT NULL,
+updated TIMESTAMP AS CURRENT_TIMESTAMP(),
+UNIQUE KEY number (number)
+);
+
+CREATE TABLE IF NOT EXISTS connections (
+id INT AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(128) NOT NULL,
+line_id INT NOT NULL,
+duration INT NOT NULL,
+distance INT NOT NULL,
+updated TIMESTAMP AS CURRENT_TIMESTAMP(),
+--foreign key (line_id) references lines(id) ON DELETE CASCADE,
+UNIQUE KEY line_id (name, line_id)
+);
