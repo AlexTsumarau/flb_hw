@@ -16,6 +16,6 @@ line_id INT NOT NULL,
 duration INT NOT NULL,
 distance INT NOT NULL,
 updated TIMESTAMP AS CURRENT_TIMESTAMP(),
---foreign key (line_id) references lines(id) ON DELETE CASCADE,
+foreign key (line_id) references lines(id) ON DELETE CASCADE,
 UNIQUE KEY line_id (name, line_id)
 );
